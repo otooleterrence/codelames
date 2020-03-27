@@ -1,12 +1,4 @@
 import { createSlice } from '@reduxjs/toolkit';
-import {
-  BrowserRouter as Router,
-  Switch,
-  Route,
-  Link,
-  useRouteMatch,
-  useParams
-} from "react-router-dom";
 
 export const slice = createSlice({
   name: 'newGame',
@@ -14,7 +6,28 @@ export const slice = createSlice({
     // value: 0,
     gameActive: false,
     roomName: 'myName',
-    players: [],
+    players: [
+      {
+        name: 'Liz',
+        team: 'red',
+        leader: true,
+      },
+      {
+        name: 'Drew',
+        team: 'red',
+        leader: false,
+      },
+      {
+        name: 'Kevin',
+        team: 'blue',
+        leader: false,
+      },
+      {
+        name: 'Kristen',
+        team: 'blue',
+        leader: true,
+      },
+    ],
     leaders: [],
     teamColors: ['red', 'blue'],
     myTeam: '',
@@ -31,6 +44,36 @@ export const slice = createSlice({
     addNewRoom: (state, action) => {
       state.roomName = action.payload;
     },
+    updateNameAndTeam: (state, action) => {
+      const { name, team } = action.payload;
+      const deadName = state.myName;
+
+      state.myName = name;
+      state.myTeam = team;
+      const oldPlayers =
+        state.players.filter(player => player.name !== deadName);
+      state.players = [
+        ...oldPlayers,
+        {
+          name,
+          team,
+          leader: false,
+        },
+      ];
+    },
+    setMeLeader: state => {
+      const name = state.myName;
+      const team = state.myTeam;
+      const oldLeader = state.players
+        .findIndex(player => player.leader && player.team === team);
+      const myIndex = state.players
+        .findIndex(player => player.name === name);
+      state.players[oldLeader].leader = false;
+      state.players[myIndex].leader = true;
+    },
+    startGame: state => {
+      state.gameActive = true;
+    }
     // increment: state => {
     //   // Redux Toolkit allows us to write "mutating" logic in reducers. It
     //   // doesn't actually mutate the state because it uses the immer library,
@@ -47,7 +90,12 @@ export const slice = createSlice({
   },
 });
 
-export const { addNewRoom, /* increment, decrement, incrementByAmount */ } = slice.actions;
+export const {
+  addNewRoom,
+  updateNameAndTeam,
+  setMeLeader,
+  startGame,
+} = slice.actions;
 
 // The function below is called a thunk and allows us to perform async logic. It
 // can be dispatched like a regular action: `dispatch(incrementAsync(10))`. This
@@ -72,5 +120,11 @@ export const selectRoomName = state => state.game.roomName;
 export const selectMyName = state => state.game.myName;
 export const selectMyTeam = state => state.game.myTeam;
 export const selectIsGameActive = state => state.game.gameActive;
+export const selectRedTeam = state =>
+  state.game.players.filter(player => player.team === 'red');
+export const selectBlueTeam = state =>
+  state.game.players.filter(player => player.team === 'blue');
+export const selectTeamLeaders = state =>
+  state.game.players.filter(player => player.leader);
 
 export default slice.reducer;
